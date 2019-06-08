@@ -38,17 +38,11 @@
             <artifactId>kafka_2.10</artifactId>
             <version>0.8.2.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-            <version>0.8.2.1</version>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.26</version>
-            <!--            <scope>compile</scope>-->
         </dependency>
 
     </dependencies>
