@@ -1,52 +1,59 @@
 package com.github.lvyilin;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.log4j.BasicConfigurator;
+import kafka.consumer.ConsumerConfig;
+import kafka.consumer.KafkaStream;
+import kafka.javaapi.consumer.ConsumerConnector;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 
 public class Consumer {
-    public static void main(String[] args) throws Exception {
-        BasicConfigurator.configure();
 
+    private static final int THREADS_NUM = 1;
+    private static final String CLIENT_ID = "consumer_test_id";
+    private final ConsumerConnector consumerConnector;
+    private ExecutorService executor;
+
+    public Consumer() {
+        consumerConnector = kafka.consumer.Consumer.createJavaConsumerConnector(buildProperties());
+        executor = Executors.newFixedThreadPool(THREADS_NUM);
+    }
+
+
+    private ConsumerConfig buildProperties() {
         Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "cluster2:9092");
         props.put("zookeeper.connect", KafkaConsts.ZOOKEEPER_ADDRESS);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, KafkaConsts.GROUP_ID);
-        props.put(ConsumerConfig.SESSION_TIMEOUT_MS, "4000");
-//        props.put("zookeeper.sync.time.ms", "200");
-        props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "smallest");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY, "range");
+        props.put("group.id", KafkaConsts.GROUP_ID);
 
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
-            consumer.subscribe(KafkaConsts.TOPIC);
-            while (true) {
-                Map<String, ConsumerRecords<String, String>> records = consumer.poll(10000);
-                process(records);
-                Thread.sleep(1000);
-            }
+        props.put("zookeeper.session.timeout.ms", "10000");
+        props.put("zookeeper.sync.time.ms", "200");
+        props.put("auto.commit.interval.ms", "1000");
+        props.put("auto.offset.reset", "smallest");
+        props.put("client.id", CLIENT_ID);
+        return new ConsumerConfig(props);
+    }
+
+    public void run() {
+        Map<String, Integer> topicCountMap = new HashMap<>();
+        topicCountMap.put(KafkaConsts.TOPIC, THREADS_NUM);
+
+        Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumerConnector.createMessageStreams(topicCountMap);
+        List<KafkaStream<byte[], byte[]>> streams = consumerMap.get(KafkaConsts.TOPIC);
+
+        for (final KafkaStream stream : streams) {
+            executor.submit(new ConsumerExecutorService(stream));
         }
     }
 
-    private static void process(Map<String, ConsumerRecords<String, String>> records) throws Exception {
-        if (records == null) return;
-        for (Map.Entry<String, ConsumerRecords<String, String>> recordMetadata : records.entrySet()) {
-            List<ConsumerRecord<String, String>> recordsPerTopic = recordMetadata.getValue().records();
-            for (ConsumerRecord<String, String> record : recordsPerTopic) {
-                // process record
-                System.out.println(record.value());
 
-            }
-        }
+    public static void main(String[] args) {
+//        BasicConfigurator.configure();
+
+        new Consumer().run();
     }
-
 }
