@@ -17,7 +17,7 @@ res/     --存放数据，文档，PPT等资源文件
 ![模块](res/module.png)
 
 ### 导入
-整个项目是个Maven项目，IDEA和Eclipse应该都能导入，直接把整个目录拖到IDE。
+整个项目是个Maven项目，IDEA和Eclipse应该都能导入。
 
 父项目下有几个子项目（模块），直接按处理流程分的，流程如上图
 
