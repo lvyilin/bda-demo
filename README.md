@@ -21,6 +21,27 @@ res/     --存放数据，文档，PPT等资源文件
 
 父项目下有几个子项目（模块），直接按处理流程分的，流程如上图
 
+### HBase表设计
+```text
+|  rowkey  |            info          |                      ticket                     |     err      |
+| -------- | ------------------------ | ----------------------------------------------- | ------------ |
+|          | dt | req | res | success | mac | pcm | airport | airline | agent | country | errno | type |
+
+```
+
+### 部署
+#### produce模块
+可直接在本机IDE上运行，无需部署到虚拟机。
+#### consume模块
+首先使用以下命令初始化表
+```shell
+hbase shell
+create 'Ticket', 'info', 'ticket', 'err'
+exit
+```
+通过Maven命令`mvn clean compile assembly:single`打包，再发送到虚拟机运行。
+
+如果出现utils包的依赖问题，是由于没有安装utils包到本机，需要在**父项目**下运行`mvn install`安装子模块。
 ### 规约
 - `res/`下放了一部分数据（200条），先用这个小数据测试
 - `utils/`放硬编码的URL，魔法值，等，例如`172.18.0.2:9092`，每台机器IP不一样，放在一起好管理
