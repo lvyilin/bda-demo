@@ -58,14 +58,14 @@ spark-submit --class com.github.lvyilin.Analyser --master spark://cluster1:6066 
 
 #### db模块
 创建数据库`bigdataDemo`
-```shell
+```mysql
 create database bigdataDemo;
 use bigdataDemo;
 ```
 
 实现远程连接数据库
 需要在集群`cluster2`的mysql中设置权限，允许其他`root`主机名任意ip的地址访问
-```shell
+```mysql
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%.%.%.%' IDENTIFIED BY 'yourpassword' WITH GRANT OPTION;
 
 FLUSH PRIVILEGES;
@@ -73,7 +73,7 @@ FLUSH PRIVILEGES;
 *yourpassword处填写自己数据库的密码
 
 建立两张表`info1`和`info2`
-```shell
+```mysql
   CREATE TABLE info1
   (
     logid bigint not null auto_increment,
@@ -98,7 +98,7 @@ FLUSH PRIVILEGES;
 ```
 
 可以使用如下几种方式插入数据，特别注意datetime类型数据的插入
-```shell
+```mysql
 insert into info1(time,requester,airport,rq_num) values('20190423120011','1P','BKG', 1020);
 insert into info2(time,requester, responder, rq_s_num, rq_f_num,rate) values('2019-04-23 12:00','1P','MF', 800,200,0.8);
 ```
