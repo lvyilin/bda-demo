@@ -49,7 +49,60 @@ exit
 ```shell
 spark-submit --class com.github.lvyilin.Analyser --master spark://cluster1:6066 --deploy-mode cluster hdfs:///lib/bdademo-analyse-1.0-SNAPSHOT.jar --jars hdfs:///lib/hbase-server-1.2.6.jar --executor-memory 256M --total-executor-cores 8
 ```
+
+使用以下命令提交任务
+```shell
+spark-submit --class com.github.lvyilin.Analyser --master spark://cluster1:6066 --deploy-mode cluster hdfs:///lib/bdademo-analyse-1.0-SNAPSHOT.jar --jars hdfs:///lib/hbase-server-1.2.6.jar --executor-memory 256M --total-executor-cores 8
+```
 参数`--executor-memory`和`--total-executor-cores`可以根据本机的性能进行修改，或直接去除。
+
+#### db模块
+创建数据库`bigdataDemo`
+```shell
+create database bigdataDemo;
+use bigdataDemo;
+```
+
+实现远程连接数据库
+需要在集群`cluster2`的mysql中设置权限，允许其他`root`主机名任意ip的地址访问
+```shell
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%.%.%.%' IDENTIFIED BY 'yourpassword' WITH GRANT OPTION;
+
+FLUSH PRIVILEGES;
+```
+*yourpassword处填写自己数据库的密码
+
+建立两张表`info1`和`info2`
+```shell
+  CREATE TABLE info1
+  (
+    logid bigint not null auto_increment,
+    time datetime,
+    requester varchar(255),
+    airport varchar(255),
+    rq_num bigint,
+    primary key (logid)
+  );
+  
+  CREATE TABLE info2
+  (
+    logid bigint not null auto_increment,
+    time datetime,
+    requester varchar(255),
+    responder varchar(255),
+    rq_s_num bigint,
+    rq_f_num bigint,
+    rate double,
+    primary key (logid)
+  );
+```
+
+可以使用如下几种方式插入数据，特别注意datetime类型数据的插入
+```shell
+insert into info1(time,requester,airport,rq_num) values('20190423120011','1P','BKG', 1020);
+insert into info2(time,requester, responder, rq_s_num, rq_f_num,rate) values('2019-04-23 12:00','1P','MF', 800,200,0.8);
+```
+*datatime类型数据可以用`20190423120011`、`20190423`、`2019-04-23 12:00`、`2019-04-23 12:00:00`的方式插入
 ### 规约
 - `res/`下放了一部分数据（200条），先用这个小数据测试
 - `utils/`放硬编码的URL，魔法值，等，例如`172.18.0.2:9092`，每台机器IP不一样，放在一起好管理
