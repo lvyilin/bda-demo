@@ -23,9 +23,9 @@ res/     --存放数据，文档，PPT等资源文件
 
 ### HBase表设计
 ```text
-|  rowkey  |            info          |                      ticket                     |     err      |
-| -------- | ------------------------ | ----------------------------------------------- | ------------ |
-|          | dt | req | res | success | mac | pcm | airport | airline | agent | country | errno | type |
+|  rowkey   |         info        |                      ticket                     |     err      |
+| --------- | ------------------- | ----------------------------------------------- | ------------ |
+| dt&rowkey | req | res | success | mac | pcm | airport | airline | agent | country | errno | type |
 
 ```
 
@@ -42,6 +42,14 @@ exit
 通过Maven命令`mvn clean compile assembly:single`打包，再发送到虚拟机运行。
 
 如果出现utils包的依赖问题，是由于没有安装utils包到本机，需要在**父项目**下运行`mvn install`安装子模块。
+#### analyse模块
+使用`package`打包发送到虚拟机，再放到虚拟机的HDFS的`/lib`文件夹中，同时将依赖包`hbase-server-1.2.6.jar`也放入`/lib`
+
+使用以下命令提交任务
+```shell
+spark-submit --class com.github.lvyilin.Analyser --master spark://cluster1:6066 --deploy-mode cluster hdfs:///lib/bdademo-analyse-1.0-SNAPSHOT.jar --jars hdfs:///lib/hbase-server-1.2.6.jar --executor-memory 256M --total-executor-cores 8
+```
+参数`--executor-memory`和`--total-executor-cores`可以根据本机的性能进行修改，或直接去除。
 ### 规约
 - `res/`下放了一部分数据（200条），先用这个小数据测试
 - `utils/`放硬编码的URL，魔法值，等，例如`172.18.0.2:9092`，每台机器IP不一样，放在一起好管理
