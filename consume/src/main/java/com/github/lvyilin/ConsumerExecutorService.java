@@ -21,7 +21,7 @@ public class ConsumerExecutorService implements Runnable {
     private static final byte[] cfInfoBytes = Bytes.toBytes("info");
     private static final byte[] cfTicketBytes = Bytes.toBytes("ticket");
     private static final byte[] cfErrBytes = Bytes.toBytes("err");
-    private static final byte[] colDtBytes = Bytes.toBytes("dt");
+    //    private static final byte[] colDtBytes = Bytes.toBytes("dt");
     private static final byte[] colReqBytes = Bytes.toBytes("req");
     private static final byte[] colResBytes = Bytes.toBytes("res");
     private static final byte[] colSuccessBytes = Bytes.toBytes("success");
@@ -65,11 +65,11 @@ public class ConsumerExecutorService implements Runnable {
     private void addRecords(String row) throws IOException {
         String[] fieldSplit = row.split("\\|");
         assert fieldSplit.length == HBaseConsts.COLUMN_NUM;
-
-        Put put = new Put(Bytes.toBytes(fieldSplit[0]));
+        String rowkey = fieldSplit[1] + "$" + fieldSplit[0];
+        Put put = new Put(Bytes.toBytes(rowkey));
 
         boolean success = fieldSplit[13].equals("1");
-        put.addColumn(cfInfoBytes, colDtBytes, Bytes.toBytes(fieldSplit[1]));
+//        put.addColumn(cfInfoBytes, colDtBytes, Bytes.toBytes(fieldSplit[1]));
         put.addColumn(cfInfoBytes, colReqBytes, Bytes.toBytes(fieldSplit[8]));
         put.addColumn(cfInfoBytes, colResBytes, Bytes.toBytes(fieldSplit[9]));
         put.addColumn(cfInfoBytes, colSuccessBytes, Bytes.toBytes(success ? "1" : "0"));
