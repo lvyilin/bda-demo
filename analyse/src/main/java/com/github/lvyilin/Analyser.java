@@ -99,7 +99,7 @@ public class Analyser implements Serializable {
                 });
                 List<Tuple2<String, Integer>> output = countRDD.collect();
                 for (Tuple2<?, ?> tuple : output) {
-                    System.out.println(startDateTime.toString(fmt) + " : " + tuple._1() + " : " + tuple._2());
+//                    System.out.println(startDateTime.toString(fmt) + " : " + tuple._1() + " : " + tuple._2());
                     // TODO: save to mysql
 
                     String[] splitInfo = tuple._1().toString().split("#");
@@ -177,7 +177,7 @@ public class Analyser implements Serializable {
                 });
                 List<Tuple2<String, Integer>> output = countRDD.collect();
                 for (Tuple2<?, ?> tuple : output) {
-                    System.out.println(startDateTime.toString(fmt) + " : " + tuple._1() + " : " + tuple._2());
+//                    System.out.println(startDateTime.toString(fmt) + " : " + tuple._1() + " : " + tuple._2());
                     // TODO: save to mysql
 
                     String[] splitInfo = tuple._1().toString().split("#");
@@ -203,9 +203,8 @@ public class Analyser implements Serializable {
 
     public static void main(String[] args) {
         new Analyser().task1();
-        new Analyser().task2();
+//        new Analyser().task2();
         MysqlHelper dbHelper = new MysqlHelper();
-        System.out.println("db connected!");
         for (String str : info1List) {
             String[] splitInfo = str.split("#");
             dbHelper.insertInfo1(splitInfo[0], splitInfo[1], splitInfo[2], splitInfo[3]);

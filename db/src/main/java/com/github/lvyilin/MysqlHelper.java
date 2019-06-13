@@ -1,10 +1,6 @@
 package com.github.lvyilin;
 
 import java.sql.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 
 public class MysqlHelper {
@@ -87,7 +83,6 @@ public class MysqlHelper {
         //insert into info1(time,requester,airport,rq_num) values('20190423120011','1P','BKG', 1020);
         try {
             assert !conn.isClosed();
-            System.out.println("insertInfo1");
             String sql = "insert into info1(time,requester,airport,rq_num) values(?, ?, ?, ?);";
             try (PreparedStatement preparedStmt = conn.prepareStatement(sql)) {
                 preparedStmt.setString(1, time);
