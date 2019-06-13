@@ -66,7 +66,7 @@ use bigdataDemo;
 实现远程连接数据库
 需要在集群`cluster2`的mysql中设置权限，允许其他`root`主机名任意ip的地址访问
 ```mysql
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%.%.%.%' IDENTIFIED BY 'yourpassword' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'yourpassword' WITH GRANT OPTION;
 
 FLUSH PRIVILEGES;
 ```
