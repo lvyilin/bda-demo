@@ -15,6 +15,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import org.joda.time.LocalDateTime;
@@ -24,9 +25,7 @@ import scala.Serializable;
 import scala.Tuple2;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 
 public class Analyser implements Serializable {
@@ -36,32 +35,25 @@ public class Analyser implements Serializable {
     private static LocalDateTime MIN_DATETIME = fmt.parseLocalDateTime("20190423000000");
     private static LocalDateTime MAX_DATETIME = fmt.parseLocalDateTime("20190423230000");
     private static SparkConf sparkConf = new SparkConf().setAppName(APP_NAME).setMaster(SparkConsts.SPARK_MASTER_URL);
-    private static ArrayList<String> info1List = new ArrayList<>();
-    private static ArrayList<String> info2List = new ArrayList<>();
+    private LocalDateTime startDateTime;
+    private LocalDateTime endDateTime;
 
     private void task1() {
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);
         Configuration conf = HBaseConfiguration.create();
         conf.set("hbase.zookeeper.quorum", "cluster1,cluster2,cluster3");
-
         String tableName = HBaseConsts.TABLE_NAME;
         conf.set(TableInputFormat.INPUT_TABLE, tableName);
-//        String columns = "info:req ticket:airport";
-//        conf.set(TableInputFormat.SCAN_COLUMNS, columns);
         Scan scan = new Scan();
         scan.addFamily(Bytes.toBytes("info"));
         scan.addFamily(Bytes.toBytes("ticket"));
         scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("req"));
         scan.addColumn(Bytes.toBytes("ticket"), Bytes.toBytes("airport"));
 
-        LocalDateTime startDateTime = MIN_DATETIME;
-        LocalDateTime endDateTime = MIN_DATETIME.plusHours(1);
+        startDateTime = MIN_DATETIME;
+        endDateTime = MIN_DATETIME.plusHours(1);
 
-//        MysqlHelper dbHelper = new MysqlHelper();
         do {
-//            System.out.println(startDateTime.toString(fmt));
-//            System.out.println(endDateTime.toString(fmt));
-
             scan.setStartRow(Bytes.toBytes(startDateTime.toString(fmt)));
             scan.setStopRow(Bytes.toBytes(endDateTime.toString(fmt)));
             try {
@@ -97,24 +89,22 @@ public class Analyser implements Serializable {
                         return i1 + i2;
                     }
                 });
-                List<Tuple2<String, Integer>> output = countRDD.collect();
-                for (Tuple2<?, ?> tuple : output) {
-//                    System.out.println(startDateTime.toString(fmt) + " : " + tuple._1() + " : " + tuple._2());
-                    // TODO: save to mysql
 
-                    String[] splitInfo = tuple._1().toString().split("#");
-                    assert splitInfo.length == 2;
-                    info1List.add(startDateTime.toString(fmt) + "#" + splitInfo[0] + "#" + splitInfo[1] + "#" + tuple._2());
-//                    dbHelper.insertInfo1(startDateTime.toString(fmt), splitInfo[0], splitInfo[1], (String) tuple._2());
-                }
+                JavaRDD<String> finalRDD = countRDD.map(new Function<Tuple2<String, Integer>, String>() {
+                    @Override
+                    public String call(Tuple2<String, Integer> tuple) throws Exception {
+                        return startDateTime.toString(fmt) + "#" + tuple._1() + "#" + tuple._2();
+                    }
+                });
+                finalRDD.coalesce(1).saveAsTextFile("/res1-" + startDateTime.toString(fmt));
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            startDateTime = endDateTime;
+            startDateTime = new LocalDateTime(endDateTime);
             endDateTime = endDateTime.plusHours(1);
         } while (!startDateTime.isAfter(MAX_DATETIME));
 
-//        dbHelper.close();
         ctx.stop();
     }
 
@@ -131,14 +121,10 @@ public class Analyser implements Serializable {
         scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("res"));
         scan.addColumn(Bytes.toBytes("info"), Bytes.toBytes("success"));
 
-        LocalDateTime startDateTime = MIN_DATETIME;
-        LocalDateTime endDateTime = MIN_DATETIME.plusHours(1);
+        startDateTime = MIN_DATETIME;
+        endDateTime = MIN_DATETIME.plusHours(1);
 
-//        MysqlHelper dbHelper = new MysqlHelper();
         do {
-//            System.out.println(startDateTime.toString(fmt));
-//            System.out.println(endDateTime.toString(fmt));
-
             scan.setStartRow(Bytes.toBytes(startDateTime.toString(fmt)));
             scan.setStopRow(Bytes.toBytes(endDateTime.toString(fmt)));
             try {
@@ -175,49 +161,25 @@ public class Analyser implements Serializable {
                         return i1 + i2;
                     }
                 });
-                List<Tuple2<String, Integer>> output = countRDD.collect();
-                for (Tuple2<?, ?> tuple : output) {
-//                    System.out.println(startDateTime.toString(fmt) + " : " + tuple._1() + " : " + tuple._2());
-                    // TODO: save to mysql
-
-                    String[] splitInfo = tuple._1().toString().split("#");
-                    assert splitInfo.length == 3;
-                    boolean isSuccess = splitInfo[2].equals("1");
-                    info2List.add(isSuccess + "#" + startDateTime.toString(fmt) + "#" + splitInfo[0] + "#" + splitInfo[1] + "#" + tuple._2());
-//                    if (isSuccess) {
-//                        dbHelper.insertInfo2OnSuccess(startDateTime.toString(fmt), splitInfo[0], splitInfo[1], (String) tuple._2());
-//                    } else {
-//                        dbHelper.insertInfo2OnFail(startDateTime.toString(fmt), splitInfo[0], splitInfo[1], (String) tuple._2());
-                }
-
+                JavaRDD<String> finalRDD = countRDD.map(new Function<Tuple2<String, Integer>, String>() {
+                    @Override
+                    public String call(Tuple2<String, Integer> tuple) throws Exception {
+                        return startDateTime.toString(fmt) + "#" + tuple._1() + "#" + tuple._2();
+                    }
+                });
+                finalRDD.coalesce(1).saveAsTextFile("/res2-" + startDateTime.toString(fmt));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            startDateTime = endDateTime;
+            startDateTime = new LocalDateTime(endDateTime);
             endDateTime = endDateTime.plusHours(1);
         } while (!startDateTime.isAfter(MAX_DATETIME));
 
-//        dbHelper.close();
         ctx.stop();
     }
 
     public static void main(String[] args) {
-        new Analyser().task1();
-//        new Analyser().task2();
-        MysqlHelper dbHelper = new MysqlHelper();
-        for (String str : info1List) {
-            String[] splitInfo = str.split("#");
-            dbHelper.insertInfo1(splitInfo[0], splitInfo[1], splitInfo[2], splitInfo[3]);
-        }
-        for (String str : info2List) {
-            String[] splitInfo = str.split("#");
-            boolean isSuccess = splitInfo[0].equals("1");
-            if (isSuccess) {
-                dbHelper.insertInfo2OnSuccess(splitInfo[0], splitInfo[1], splitInfo[2], splitInfo[3]);
-            } else {
-                dbHelper.insertInfo2OnFail(splitInfo[0], splitInfo[1], splitInfo[2], splitInfo[3]);
-            }
-        }
-        dbHelper.close();
+//        new Analyser().task1();
+        new Analyser().task2();
     }
 }
