@@ -7,14 +7,14 @@ produce/ --生产者程序(Kafka)
 consume/ --消费者程序(Storm/Spark streaming/单机消费者)
 analyse/ --分析日志数据(HBase/HDFS)
 db/      --数据库(MySQL)
-web/     --Web(Grafana)
+~~web/~~   --Web(Grafana)(无需编写代码)
 
 utils/   --通用代码(存放硬编码的URL, 配置等信息)
 res/     --存放数据，文档，PPT等资源文件
 ```
 
 ### 数据流
-![模块](res/module.png)
+![数据流图](res/dataflow.png)
 
 ### 导入
 整个项目是个Maven项目，IDEA和Eclipse应该都能导入。
@@ -43,16 +43,11 @@ exit
 
 如果出现utils包的依赖问题，是由于没有安装utils包到本机，需要在**父项目**下运行`mvn install`安装子模块。
 #### analyse模块
-使用`package`打包发送到虚拟机，再放到虚拟机的HDFS的`/lib`文件夹中，同时将依赖包`hbase-server-1.2.6.jar`也放入`/lib`
+使用`package`打包发送到虚拟机，再放到虚拟机的HDFS的`/lib`(自行创建)文件夹中
 
 使用以下命令提交任务
 ```shell
-spark-submit --class com.github.lvyilin.Analyser --master spark://cluster1:6066 --deploy-mode cluster hdfs:///lib/bdademo-analyse-1.0-SNAPSHOT.jar --jars hdfs:///lib/hbase-server-1.2.6.jar --executor-memory 256M --total-executor-cores 8
-```
-
-使用以下命令提交任务
-```shell
-spark-submit --class com.github.lvyilin.Analyser --master spark://cluster1:6066 --deploy-mode cluster hdfs:///lib/bdademo-analyse-1.0-SNAPSHOT.jar --jars hdfs:///lib/hbase-server-1.2.6.jar --executor-memory 256M --total-executor-cores 8
+spark-submit --class com.github.lvyilin.Analyser --master spark://cluster1:6066 --deploy-mode cluster hdfs:///lib/bdademo-analyse-1.0-SNAPSHOT.jar --executor-memory 256M --total-executor-cores 8
 ```
 参数`--executor-memory`和`--total-executor-cores`可以根据本机的性能进行修改，或直接去除。
 
@@ -66,11 +61,11 @@ use bigdataDemo;
 实现远程连接数据库
 需要在集群`cluster2`的mysql中设置权限，允许其他`root`主机名任意ip的地址访问
 ```mysql
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'yourpassword' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '<password>' WITH GRANT OPTION;
 
 FLUSH PRIVILEGES;
 ```
-*yourpassword处填写自己数据库的密码
+**<password>处填写自己数据库的密码**
 
 建立两张表`info1`和`info2`
 ```mysql
