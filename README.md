@@ -7,7 +7,6 @@ produce/ --生产者程序(Kafka)
 consume/ --消费者程序(Storm/Spark streaming/单机消费者)
 analyse/ --分析日志数据(HBase/HDFS)
 db/      --数据库(MySQL)
-~~web/~~   --Web(Grafana)(无需编写代码)
 
 utils/   --通用代码(存放硬编码的URL, 配置等信息)
 res/     --存放数据，文档，PPT等资源文件
@@ -65,7 +64,7 @@ GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '<password>' WITH GRANT 
 
 FLUSH PRIVILEGES;
 ```
-**<password>处填写自己数据库的密码**
+**\<password\>处填写自己数据库的密码**
 
 建立两张表`info1`和`info2`
 ```mysql
